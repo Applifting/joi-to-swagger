@@ -336,4 +336,12 @@ suite('swagger converts', (s) => {
 			},
 		}
 	);
+
+	simpleTest(
+		joi.string().example('foo'),
+		{
+			type: 'string',
+			example: 'foo',
+		}
+	);
 });

@@ -135,7 +135,8 @@ suite('swagger converts', (s) => {
 	simpleTest(
 		joi.string().only('A', 'B', 'C', null),
 		{
-			type: [ 'string', 'null' ],
+			type: 'string',
+			nullable: true,
 			enum: [ 'A', 'B', 'C' ],
 		}
 	);
@@ -150,7 +151,8 @@ suite('swagger converts', (s) => {
 	simpleTest(
 		joi.boolean().allow(null),
 		{
-			type: [ 'boolean', 'null' ],
+			type: 'boolean',
+			nullable: true,
 		}
 	);
 

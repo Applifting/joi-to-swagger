@@ -324,7 +324,8 @@ var parseAsType = {
 	},
 	any: (schema) => {
 		return {
-			type: 'any',
+			description: 'any',
+      example: 'any',
 		}
 	}
 };

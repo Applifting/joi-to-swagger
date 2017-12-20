@@ -322,6 +322,11 @@ var parseAsType = {
 
 		return swagger;
 	},
+	any: (schema) => {
+		return {
+			type: 'any',
+		}
+	}
 };
 
 function meta (schema, key) {

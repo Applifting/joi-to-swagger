@@ -51,7 +51,7 @@ module.exports = exports = function parse (schema, existingDefinitions) {
 	}
 
 	var defaultValue = get(schema, '_flags.default');
-	if (defaultValue) {
+	if (defaultValue !== undefined) {
 		swagger.default = defaultValue;
 	}
 

@@ -119,6 +119,10 @@ var parseAsType = {
 	},
 	string: (schema) => {
 		var swagger = { type: 'string' };
+		
+		if (find(schema._tests, { name: 'guid' })) {
+			swagger.format = 'uuid';
+		}
 
 		if (get(schema, '_flags.presence') === 'forbidden') {
 			return false;
@@ -333,7 +337,7 @@ var parseAsType = {
 			description: 'any',
       example: 'any',
 		}
-	}
+	},
 };
 
 function meta (schema, key) {

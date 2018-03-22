@@ -344,4 +344,12 @@ suite('swagger converts', (s) => {
 			example: 'foo',
 		}
 	);
+
+	simpleTest(
+		joi.string().uuid(),
+		{
+			type: 'string',
+			format: 'uuid'
+		}
+	);
 });

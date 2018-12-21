@@ -5,11 +5,11 @@ var joi = require('joi');
 
 suite('swagger converts', (s) => {
 	var i = 0;
-	function simpleTest (input, output, definitions, only) {
+	function simpleTest (input, output, components, only) {
 		s[only ? 'only' : 'test']('Set ' + i++, (t) => {
 			var result = parser(input);
 			t.deepEqual(result.swagger, output, 'swagger matches');
-			if (definitions) t.deepEqual(result.definitions, definitions, 'definitions match');
+			if (components) t.deepEqual(result.components, components, 'components match');
 			t.end();
 		});
 	}
@@ -45,6 +45,14 @@ suite('swagger converts', (s) => {
 		joi.string(),
 		{
 			type: 'string',
+		}
+	);
+
+	simpleTest(
+		joi.string().label('test'),
+		{
+			type: 'string',
+			title: 'test',
 		}
 	);
 
@@ -136,8 +144,8 @@ suite('swagger converts', (s) => {
 		joi.string().only('A', 'B', 'C', null),
 		{
 			type: 'string',
-			nullable: true,
 			enum: [ 'A', 'B', 'C' ],
+			nullable: true,
 		}
 	);
 
@@ -226,6 +234,7 @@ suite('swagger converts', (s) => {
 	simpleTest(
 		joi.object({
 			req: joi.string().required(),
+			forbiddenAny: joi.forbidden(),
 			forbiddenString: joi.string().forbidden(),
 			forbiddenNumber: joi.number().forbidden(),
 			forbiddenBoolean: joi.boolean().forbidden(),
@@ -286,13 +295,34 @@ suite('swagger converts', (s) => {
 	simpleTest(
 		joi.string().alphanum().email().meta({ className: 'Email' }),
 		{
-			$ref: '#/definitions/Email',
+			$ref: '#/components/schemas/Email',
 		},
 		{
-			Email: {
-				type: 'string',
-				format: 'email',
+			schemas: {
+				Email: {
+					type: 'string',
+					format: 'email',
+				},
 			},
+		}
+	);
+
+	simpleTest(
+		joi.string().example('sii'),
+		{
+			example: 'sii',
+			type: 'string',
+		}
+	);
+
+	simpleTest(
+		joi.string().example('sel').example('wyn'),
+		{
+			examples: [
+				'sel',
+				'wyn',
+			],
+			type: 'string',
 		}
 	);
 
@@ -310,27 +340,62 @@ suite('swagger converts', (s) => {
 		{
 			type: 'object',
 			properties: {
-				start: { $ref: '#/definitions/GeoPoint' },
-				stop: { $ref: '#/definitions/GeoPoint' },
+				start: { $ref: '#/components/schemas/GeoPoint' },
+				stop: { $ref: '#/components/schemas/GeoPoint' },
 			},
 		},
 		{
-			GeoPoint: {
-				type: 'object',
-				required: [ 'lat', 'lon' ],
-				additionalProperties: false,
-				properties: {
-					lat: {
-						type: 'number',
-						format: 'float',
-						minimum: -90,
-						maximum: 90,
+			schemas: {
+				GeoPoint: {
+					type: 'object',
+					required: [ 'lat', 'lon' ],
+					additionalProperties: false,
+					properties: {
+						lat: {
+							type: 'number',
+							format: 'float',
+							minimum: -90,
+							maximum: 90,
+						},
+						lon: {
+							type: 'number',
+							format: 'float',
+							minimum: -180,
+							maximum: 180,
+						},
 					},
-					lon: {
-						type: 'number',
-						format: 'float',
-						minimum: -180,
-						maximum: 180,
+				},
+			},
+		}
+	);
+
+	simpleTest(
+		{
+			body: joi.object().keys({
+				subject: joi.string(),
+				message: joi.string().trim().min(1, 'utf8').max(400, 'utf8').meta({ className: 'MessageBody' }),
+			}).meta({ className: 'MessageCreate', classTarget: 'requestBodies' }),
+		},
+		{
+			type: 'object',
+			properties: {
+				body: { '$ref': '#/components/requestBodies/MessageCreate' },
+			},
+		},
+		{
+			schemas: {
+				'MessageBody': {
+					maxLength: 400,
+					minLength: 1,
+					type: 'string',
+				},
+			},
+			requestBodies: {
+				'MessageCreate': {
+					type: 'object',
+					properties: {
+						message: { '$ref': '#/components/schemas/MessageBody' },
+						subject: { 'type': 'string' },
 					},
 				},
 			},
@@ -341,7 +406,31 @@ suite('swagger converts', (s) => {
 		joi.string().example('foo'),
 		{
 			type: 'string',
-			example: 'foo',
+      example: 'foo',
+    }
+  )
+  simpleTest(
+		{
+			id: joi.string()
+				.when('version', { is: joi.number().greater(0).required(), then: joi.string().required() }),
+		},
+		{
+			type: 'object',
+			properties: {
+				id: { type: 'string' },
+			},
+		}
+	);
+
+	simpleTest(
+		{
+			id: joi.string()
+				.description('user id')
+				.forbidden(),
+		},
+		{
+			type: 'object',
+			properties: {},
 		}
 	);
 
@@ -349,7 +438,15 @@ suite('swagger converts', (s) => {
 		joi.string().uuid(),
 		{
 			type: 'string',
-			format: 'uuid'
+      format: 'uuid'
+    }
+  )
+
+  simpleTest(
+		joi.date().default(Date.now, 'current date'),
+		{
+			type: 'string',
+			format: 'date-time',
 		}
 	);
 });
